@@ -1,7 +1,8 @@
-from .brain import Brain
 from .genome import Genome
+from .brain import Brain, Random
 
 __all__ = [
-    "Brain",
     "Genome",
+    "Brain",
+    "Random",
 ]

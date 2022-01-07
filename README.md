@@ -13,3 +13,13 @@ passing down and mutating a genome.
     - empty space: move? direction? velocity?
     - food: eat? carry/drop?
     - protobit: attack? reproduce?
+
+Variables:
+location (x,y)
+direction (degrees)
+velocity
+
+Actions:
+adjust variable
+eat / carry / drop
+attack / reproduce

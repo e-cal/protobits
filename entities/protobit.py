@@ -11,6 +11,9 @@ class Protobit:
         y: int,
         brain: Brain,
         genome: Genome,
+        dir: float = 0,
+        speed: float = 0,
+        max_health: int = 100,
     ) -> None:
         self.x = x
         self.y = y

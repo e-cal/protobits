@@ -1,13 +1,9 @@
-from .environment.world import World
+from .environment import World
+from .brain import Random
 
 if __name__ == "__main__":
-
     # set of brain algorithms (classes)
-    brains = [
-        # Algo1
-        # Algo2
-        # ...
-    ]
+    brains = [Random]
 
     # probabilities of brain algorithms being selected
     # must add up to 100 and be same len as brains
