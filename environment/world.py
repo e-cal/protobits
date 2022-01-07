@@ -5,7 +5,7 @@ from warnings import warn
 import pyglet
 
 from ..brain import Brain, Genome
-from ..entities import Protobit, Food
+from ..entities import Protobit, Food, Plant
 
 
 @dataclass
@@ -55,15 +55,18 @@ class World:
         height: int,
         init_pop: int,
         init_species: int,
-        brains: set[Brain],
+        brains: list[Brain],
         brain_weights: list[float] | None = None,
-        genomes: set[Genome] | None = None,
+        genomes: list[Genome] | None = None,
         genome_weights: list[float] | None = None,
     ) -> None:
         # Window
         self.width = width
         self.height = height
         self.window = pyglet.window.Window(width=self.width, height=self.height)
+
+        self.app = pyglet.app
+        self.clock = pyglet.clock
 
         # Metadata
         self.pop = init_pop
@@ -74,85 +77,94 @@ class World:
         # Handle missing genomes
         if genomes is None:
             missing = init_species
-            genomes = set()
+            genomes = []
         else:
             missing = init_species - len(genomes)
             if missing < 0:
                 warn(
-                    f"More genomes specefied than species. Using the first {init_species} genomes (after set to list conversion, order may not be preserved)."
+                    f"More genomes specefied than species. Using the first {init_species} genomes."
                 )
                 missing = 0
-                genomes = set(list(genomes)[:init_species])
+                genomes = genomes[:init_species]
 
         for _ in range(missing):
-            genomes.add(Genome.random())
+            genomes.append(Genome.random())
 
         # Generate initial protobits
         protobits = self.gen_protobits(
             init_pop, brains, brain_weights, genomes, genome_weights
         )
 
-        food = self._gen_food()
+        food = self._gen_plants()
 
         self.entities = Entities(
             protobits=protobits,
             food=food,
         )
 
-        # pyglet.clock.schedule_interval(update, 1)
-        # pyglet.app.run()
-        # for protobit in protobits:
-        #     protobit.draw()
-
     def gen_protobits(
         self,
         num: int,
-        brains: set[Brain],
+        brains: list[Brain],
         brain_weights: list[float] | None,
-        genomes: set[Genome],
+        genomes: list[Genome],
         genome_weights: list[float] | None,
     ) -> list[Protobit]:
         """Generates a list of protobits."""
+        locs = [
+            (random.randrange(1, self.width), random.randrange(1, self.height))
+            for _ in range(num)
+        ]
 
         if brain_weights is None:
             brain_weights = [100 / len(brains)] * len(brains)
         if genome_weights is None:
-            genome_weights = [100 / len(genomes)] * len(brains)
+            genome_weights = [100 / len(genomes)] * len(genomes)
+        brain = random.choices(brains, brain_weights, k=num)
+        genome = random.choices(genomes, weights=genome_weights, k=num)
 
-        # pre-calculate and use cumulative weights to avoid implicit
-        # in the following loop
-        cum_weights = [sum(brain_weights[:i]) for i in range(1, len(brain_weights) + 1)]
+        return [
+            Protobit(x, y, brain, genome)
+            for (x, y), brain, genome in zip(locs, brain, genome)
+        ]
 
-        protobits = []
-        for _ in range(num):
-            random.choices(list(brains), cum_weights=cum_weights)
+    def _gen_plants(self) -> list[Food]:
+        """Internal function to generate food during world initialization.
 
-        return protobits
+        On-demand food spawning should be done with `spawn`.
+        """
 
-    def _gen_food(self) -> list[Food]:
-        return []
+        locs = [
+            (random.randrange(1, self.width), random.randrange(1, self.height))
+            for _ in range(random.randrange(self.pop // 2, int(self.pop * 1.5)))
+        ]
+        return [Plant(x, y) for x, y in locs]
 
     def spawn(self):
         """Directly spawn entities into the world."""
         pass
 
-    def update(self, dt):
-        """
-        Update the state of the world.
+    def update(self, _=None):
+        """Update the state of the world."""
+        self.window.clear()
 
-        Args:
-            dt: Delta time (since last update).
-                Should be approx what is passed to `schedule_interval()` below.
-        """
-
-        window.clear()
+        for food in self.entities.food:
+            food.update()
 
         dead = []
-        for protobit in protobits:
+        for protobit in self.entities.protobits:
             protobit.update()
             if protobit.dead:
                 dead.append(protobit)
-        for pellet in food:
-            pellet.draw()
         for d in dead:
-            protobits.remove(d)
+            self.entities.protobits.remove(d)
+
+    def run(self, framerate: float = 1 / 60):
+        """Run the world simulation at the set framerate.
+
+        Args:
+            framerate (float): Minimum update time interval.
+        """
+        self.update()
+        self.clock.schedule_interval(self.update, framerate)
+        self.app.run()

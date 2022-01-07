@@ -1,7 +1,7 @@
 from random import randrange
 from pyglet.shapes import Circle
 
-from ..brain import Brain
+from ..brain import Brain, Genome
 
 
 class Protobit:
@@ -9,16 +9,15 @@ class Protobit:
         self,
         x: int,
         y: int,
-        size: int,
         brain: Brain,
+        genome: Genome,
     ) -> None:
         self.x = x
         self.y = y
-        self.size = size
         self.body = Circle(
             x=self.x,
             y=self.y,
-            radius=self.size,
+            radius=10,
             color=(255, 255, 255),
         )
         self.nourishment = randrange(1, 11)
