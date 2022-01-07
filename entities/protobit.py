@@ -1,9 +1,17 @@
-from pyglet.shapes import Circle
 from random import randrange
+from pyglet.shapes import Circle
+
+from ..brain import Brain
 
 
 class Protobit:
-    def __init__(self, x, y, size) -> None:
+    def __init__(
+        self,
+        x: int,
+        y: int,
+        size: int,
+        brain: Brain,
+    ) -> None:
         self.x = x
         self.y = y
         self.size = size
