@@ -1,5 +1,7 @@
 # Protobits
 
+> [WIP]; stale atm
+
 _Protobits_ is my take on an artificial life simulation.
 
 The agents (protobits) are able to learn over the course of their lifetime, through
